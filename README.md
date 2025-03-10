@@ -1,1 +1,1 @@
-![grafik](https://github.com/user-attachments/assets/bac37d76-a5b0-4a99-9037-7d1d0595da8f)
+![grafik](https://github.com/user-attachments/assets/2e093bad-54bd-4d62-890f-c1bf14074eb2)
