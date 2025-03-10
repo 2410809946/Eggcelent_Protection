@@ -2,7 +2,7 @@
 % Simplified Impact Simulation for Kinder Surprise Egg
 
 % Basic parameters
-egg_radius = 0.03;        % Radius of egg [m]
+egg_radius = 0.055;        % Radius of egg [m]
 egg_thickness = 0.001;    % Shell thickness [m] 
 egg_density = 950;        % Density of plastic [kg/m^3]
 egg_E = 2e9;              % Young's Modulus for plastic [Pa]
