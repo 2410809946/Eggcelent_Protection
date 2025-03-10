@@ -1,1 +1,168 @@
-adsf
+% filepath: c:\Users\rapha\OneDrive\00 Privat\24 Python\20 Projekte\habit-tracker\habit-tracker\Eggcelent_Simulation.m
+% Simplified Impact Simulation for Kinder Surprise Egg
+
+% Basic parameters
+egg_radius = 0.03;        % Radius of egg [m]
+egg_thickness = 0.001;    % Shell thickness [m] 
+egg_density = 950;        % Density of plastic [kg/m^3]
+egg_E = 2e9;              % Young's Modulus for plastic [Pa]
+egg_poisson = 0.35;       % Poisson's ratio
+breaking_stress = 30e6;   % Breaking stress [Pa]
+
+% Impact parameters
+g = 9.81;                 % Gravity [m/s^2]
+h = 3;                    % Fall height [m]
+v_impact = sqrt(2*g*h);   % Impact velocity [m/s]
+
+% Simple analytical model of spherical shell impact
+% Based on Hertz contact theory and thin shell mechanics
+
+% Mass of egg shell (approximate)
+volume = 4/3 * pi * egg_radius^3 - 4/3 * pi * (egg_radius-egg_thickness)^3;
+mass = volume * egg_density;
+
+% Impact force calculation (simplified Hertz contact)
+impact_time = 0.002;      % Typical impact duration [s]
+avg_deceleration = v_impact / impact_time;
+max_force = mass * avg_deceleration;
+
+% Contact area (approximate)
+contact_radius = sqrt(max_force / (pi * egg_E));
+contact_area = pi * contact_radius^2;
+
+% Stress calculation
+hoop_stress = max_force / (2 * pi * egg_radius * egg_thickness);
+direct_stress = max_force / contact_area;
+max_stress = max(hoop_stress, direct_stress);
+
+% Results
+fprintf('Egg properties:\n');
+fprintf('  - Radius: %.1f mm\n', egg_radius*1000);
+fprintf('  - Shell thickness: %.1f mm\n', egg_thickness*1000);
+fprintf('  - Mass: %.1f g\n', mass*1000);
+fprintf('\nImpact conditions:\n');
+fprintf('  - Drop height: %.1f m\n', h);
+fprintf('  - Impact velocity: %.1f m/s\n', v_impact);
+fprintf('\nImpact results:\n');
+fprintf('  - Maximum force: %.1f N\n', max_force);
+fprintf('  - Maximum stress: %.1f MPa\n', max_stress/1e6);
+fprintf('  - Breaking stress: %.1f MPa\n', breaking_stress/1e6);
+
+% Conclusion
+if max_stress > breaking_stress
+    fprintf('\nCONCLUSION: The egg would BREAK upon impact!\n');
+else
+    fprintf('\nCONCLUSION: The egg would SURVIVE the impact.\n');
+end
+
+% Create egg coordinates (make it slightly elliptical for more realism)
+a = egg_radius;      % x semi-axis
+b = egg_radius;      % y semi-axis 
+c = egg_radius*1.2;  % z semi-axis (slightly elongated)
+
+theta = linspace(0, pi, 100);
+phi = linspace(0, 2*pi, 50);
+[THETA, PHI] = meshgrid(theta, phi);
+X = a * sin(THETA) .* cos(PHI);
+Y = b * sin(THETA) .* sin(PHI);
+Z = c * cos(THETA);
+
+% Calculate stress distribution on egg surface
+stress_colors = ones(size(Z));
+for i = 1:size(Z,1)
+    for j = 1:size(Z,2)
+        % Calculate distance from impact point (bottom of egg)
+        dist = sqrt(X(i,j)^2 + Y(i,j)^2 + (Z(i,j)+c)^2);
+        % Stress decreases with distance from impact
+        stress_colors(i,j) = max(0, 1 - dist/(2*egg_radius)); 
+    end
+end
+
+% Normalize stress to actual values
+stress_distribution = stress_colors * max_stress;
+
+% Plot: The egg with stress distribution
+figure('Position', [100, 100, 1000, 700], 'Name', 'Kinder Surprise Egg Impact Analysis');
+
+% Main subplot for egg
+subplot(1, 2, 1);
+surf(X, Y, Z, stress_distribution, 'FaceAlpha', 0.9, 'EdgeColor', 'none');
+hold on;
+
+% Plot impact point and direction
+impact_point = plot3(0, 0, -c, 'ro', 'MarkerSize', 10, 'MarkerFaceColor', 'r');
+quiver3(0, 0, -c/2, 0, 0, -0.5*c, 0, 'r', 'LineWidth', 2);
+text(0, 0, 0, 'Impact Force', 'Color', 'r', 'FontWeight', 'bold');
+
+% Add lighting effects
+light('Position',[1 1 1],'Style','infinite');
+lighting phong;
+material shiny;
+
+% Setup axes and labels
+colormap(jet);
+h_colorbar = colorbar;
+ylabel(h_colorbar, 'Stress (Pa)');
+caxis([0 max(max_stress, breaking_stress)]);
+hold on;
+plot3([-a a], [0 0], [-c -c], 'k--', 'LineWidth', 1.5); % Add scale reference
+text(a, 0, -c, [num2str(2*a*1000, '%.0f') ' mm'], 'FontSize', 10);
+
+axis equal;
+title('Kinder Surprise Egg Stress Distribution', 'FontSize', 14);
+xlabel('X [m]');
+ylabel('Y [m]');
+zlabel('Z [m]');
+view(40, 30);
+grid on;
+
+% Add breaking stress threshold line to colorbar
+hold on;
+breaking_line_y = breaking_stress / max(max_stress, breaking_stress+1);
+breaking_line_y = max(0.1, min(0.9, breaking_line_y));
+annotation('line', [0.48 0.52], [breaking_line_y breaking_line_y], 'Color', 'r', 'LineWidth', 2);
+text(a*1.5, 0, 0, ['Breaking Threshold: ' num2str(breaking_stress/1e6, '%.1f') ' MPa'], 'Color', 'r', 'FontWeight', 'bold');
+
+% Information panel on the right
+subplot(1, 2, 2);
+axis off;
+
+% Create a clean information display
+title('Impact Analysis Parameters', 'FontSize', 14);
+text_y = 0.95;
+text_spacing = 0.05;
+
+% Egg Properties Section
+text(0.1, text_y, 'EGG PROPERTIES:', 'FontWeight', 'bold', 'FontSize', 12);
+text_y = text_y - text_spacing;
+text(0.1, text_y, ['Radius: ' num2str(egg_radius*1000, '%.1f') ' mm'], 'FontSize', 11);
+text_y = text_y - text_spacing;
+text(0.1, text_y, ['Shell Thickness: ' num2str(egg_thickness*1000, '%.1f') ' mm'], 'FontSize', 11);
+text_y = text_y - text_spacing;
+text(0.1, text_y, ['Mass: ' num2str(mass*1000, '%.1f') ' g'], 'FontSize', 11);
+text_y = text_y - text_spacing;
+text(0.1, text_y, ['Young''s Modulus: ' num2str(egg_E/1e9, '%.1f') ' GPa'], 'FontSize', 11);
+text_y = text_y - text_spacing;
+text(0.1, text_y, ['Breaking Stress: ' num2str(breaking_stress/1e6, '%.1f') ' MPa'], 'FontSize', 11);
+text_y = text_y - 1.5*text_spacing;
+
+% Impact Conditions Section
+text(0.1, text_y, 'IMPACT CONDITIONS:', 'FontWeight', 'bold', 'FontSize', 12);
+text_y = text_y - text_spacing;
+text(0.1, text_y, ['Drop Height: ' num2str(h, '%.1f') ' m'], 'FontSize', 11);
+text_y = text_y - text_spacing;
+text(0.1, text_y, ['Impact Velocity: ' num2str(v_impact, '%.1f') ' m/s'], 'FontSize', 11);
+text_y = text_y - 1.5*text_spacing;
+
+% Results Section
+text(0.1, text_y, 'IMPACT RESULTS:', 'FontWeight', 'bold', 'FontSize', 12);
+text_y = text_y - text_spacing;
+text(0.1, text_y, ['Maximum Force: ' num2str(max_force, '%.1f') ' N'], 'FontSize', 11);
+text_y = text_y - text_spacing;
+text(0.1, text_y, ['Contact Area: ' num2str(contact_area*1e6, '%.1f') ' mm²'], 'FontSize', 11);
+text_y = text_y - text_spacing;
+text(0.1, text_y, ['Maximum Stress: ' num2str(max_stress/1e6, '%.1f') ' MPa'], 'FontSize', 11);
+text_y = text_y - text_spacing;
+text(0.1, text_y, ['Stress Ratio: ' num2str(max_stress/breaking_stress, '%.2f') ' × Breaking Stress'], 'FontSize', 11);
+text_y = text_y - 1.5*text_spacing;
+
